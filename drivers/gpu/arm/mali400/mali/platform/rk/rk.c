@@ -36,6 +36,7 @@
 #include <linux/pm_runtime.h>
 #include <linux/delay.h>
 #include <linux/rockchip/cpu.h>
+#include <soc/rockchip/rockchip_opp_select.h>
 
 #include <linux/mali/mali_utgard.h>
 #include "mali_kernel_common.h"
@@ -443,6 +444,11 @@ static void rk_platform_power_off_gpu(struct device *dev)
 {
 	rk_platform_disable_clk_gpu(dev);
 	rk_platform_disable_gpu_regulator(dev);
+}
+
+int rk_platform_init_opp_table(struct device *dev)
+{
+	return rockchip_init_opp_table(dev, NULL, "gpu_leakage", "mali");
 }
 
 static int mali_runtime_suspend(struct device *device)
