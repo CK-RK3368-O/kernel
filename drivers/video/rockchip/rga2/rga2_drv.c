@@ -72,6 +72,7 @@ ktime_t rga2_start;
 ktime_t rga2_end;
 int rga2_flag;
 int first_RGA2_proc;
+uint32_t rk3368;
 
 rga2_session rga2_session_global;
 long (*rga2_ioctl_kernel_p)(struct rga_req *);
@@ -906,6 +907,9 @@ retry:
 	if(ret < 0)
 		return ret;
 
+if(rk3368 == 1)
+	ret_timeout = wait_event_timeout(session->wait, atomic_read(&session->done), RGA2_TIMEOUT_DELAY/2);
+else
 	ret_timeout = wait_event_timeout(session->wait, atomic_read(&session->done), RGA2_TIMEOUT_DELAY);
 
 	if (unlikely(ret_timeout< 0))
@@ -1031,12 +1035,37 @@ static long rga_ioctl(struct file *file, uint32_t cmd, unsigned long arg)
 					req_first.src.act_h = MIN(240, MIN(req_first.src.act_h, req_first.dst.act_h));
 					req_first.dst.act_w = req_first.src.act_w;
 					req_first.dst.act_h = req_first.src.act_h;
-					ret = rga2_blit_async(session, &req_first);
+					if(rk3368 == 1)
+						ret = rga2_blit_sync(session, &req_first);
+					else
+						ret = rga2_blit_async(session, &req_first);
 				}
 				ret = rga2_blit_async(session, &req);
 				first_RGA2_proc = 1;
 			}
 			else {
+				if(rk3368 == 1)
+				{
+					memcpy(&req_first, &req, sizeof(struct rga2_req));
+					if ((req_first.src.act_w == 1920) && (req_first.src.act_h == 1008))
+					{
+						printk("src : aw=%d ah=%d vw=%d vh=%d  \n",
+							req_first.src.act_w, req_first.src.act_h, req_first.src.vir_w, req_first.src.vir_h);
+						printk("dst : aw=%d ah=%d vw=%d vh=%d  \n",
+							req_first.dst.act_w, req_first.dst.act_h, req_first.dst.vir_w, req_first.dst.vir_h);
+					}
+					else
+					{
+						if ((req_first.src.act_w != req_first.dst.act_w)
+								|| (req_first.src.act_h != req_first.dst.act_h)) {
+							req_first.src.act_w = MIN(320, MIN(req_first.src.act_w, req_first.dst.act_w));
+							req_first.src.act_h = MIN(240, MIN(req_first.src.act_h, req_first.dst.act_h));
+							req_first.dst.act_w = req_first.src.act_w;
+							req_first.dst.act_h = req_first.src.act_h;
+							ret = rga2_blit_sync(session, &req_first);
+						}
+					}
+				}
 				ret = rga2_blit_async(session, &req);
 			}
 			break;
@@ -1401,6 +1430,7 @@ static int rga2_drv_probe(struct platform_device *pdev)
 	data->dev = &pdev->dev;
 	rga2_drvdata = data;
 	of_property_read_u32(np, "dev_mode", &rga2_service.dev_mode);
+	of_property_read_u32(np, "rk3368", &rk3368);
 
 #if defined(CONFIG_ION_ROCKCHIP)
 	data->ion_client = rockchip_ion_client_create("rga");
