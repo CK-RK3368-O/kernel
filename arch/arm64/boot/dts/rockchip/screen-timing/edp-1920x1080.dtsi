@@ -5,7 +5,6 @@
 		enable-gpios = <&gpio3 17 GPIO_ACTIVE_HIGH>;//GPIO0_C2
 		delay,prepare = <300>;
 		bus-format = <MEDIA_BUS_FMT_RGB666_1X18>;
-		bpc = <6>;
 		disp_timings: display-timings {
 			native-mode = <&timing0>;
 			timing0: timing0 {
@@ -59,6 +58,6 @@
         status = "okay";
         pinctrl-names = "default";
         pinctrl-0 = <&bl_en>;
-        pwms = <&pwm1 0 25000 0>;
+        pwms = <&pwm1 0 25000 1>;
         enable-gpios = <&gpio3 28 GPIO_ACTIVE_HIGH>;
 };
