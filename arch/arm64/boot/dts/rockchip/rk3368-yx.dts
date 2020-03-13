@@ -87,7 +87,6 @@
                         gpios = <&gpio3 18 GPIO_ACTIVE_HIGH>;
                         label = "led-blink";//创建子节点 
                         linux,default-trigger = "timer";//没有默认的触发源,也可以写为timer 
-                        retain-state-suspended; //休眠保持运行
                 };
                 hub_pwr {
                         gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>;
@@ -267,7 +266,7 @@
 	num-slots = <1>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdmmc_clk &sdmmc_cmd &sdmmc_cd &sdmmc_bus4>;
-	status = "disabled";
+	status = "okay";
 };
 
 &gmac {
